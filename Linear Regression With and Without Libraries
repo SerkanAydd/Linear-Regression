@@ -1,0 +1,133 @@
+location = "C:\\Users\\serka\\OneDrive\\Masaüstü\\computer engineer\\months and sales.txt"
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+datas = pd.read_csv(location)
+
+months = datas.iloc[:,:1].values
+sales = datas.iloc[:,1:].values
+
+x_train, x_test, y_train, y_test = train_test_split(months, sales, test_size = 0.33, random_state = 0)
+
+lr = LinearRegression()
+lr.fit(x_train, y_train)
+y_pred = lr.predict(x_test)
+print(r2_score(y_pred, y_test))
+
+# it is with related libraries
+# it is without any libraries except random
+
+import random
+
+location = "C:\\Users\\serka\\OneDrive\\Masaüstü\\computer engineer\\months and sales.txt"
+
+import csv
+
+def csv_reader(filename):
+    dataset = []
+    with open(filename, "r") as file:
+        csv_reader = csv.reader(file)
+        for row in csv_reader:
+            if not row:
+                continue
+            dataset.append(row)
+    dataset = dataset[1:]
+    for i in range(len(dataset[0])):
+        for row in dataset:
+            row[i] = float(row[i])
+    return dataset
+
+def x_y(dataset):
+    x = []
+    y = []
+    for i in range(len(dataset)):
+        x.append(dataset[i][:len(dataset[0]) - 1])
+        y.append(dataset[i][len(dataset[0]) - 1:])
+    return x, y
+
+def train_test_split(x, y, split):
+    size = len(x) - int(len(x) * split)
+    x_copy = list(x)
+    y_copy = list(y)
+    train_set = []
+    for i in range(size):
+        index = random.randrange(len(x_copy))
+        x_value = x[index]
+        y_value = y[index]
+        x_copy.pop(index)
+        y_copy.pop(index)
+        train_set.append([x_value, y_value])
+    test_set = []
+    for i in range(len(x_copy)):
+        test_set.append([x_copy[i], y_copy[i]])
+    x_train = []
+    y_train = []
+    for i in range(len(train_set)):
+        x_train.append(train_set[i][0])
+        y_train.append(train_set[i][1])
+    x_test = []
+    y_test = []
+    for i in range(len(test_set)):
+        x_test.append(test_set[i][0])
+        y_test.append(test_set[i][1])
+    return x_train, x_test, y_train, y_test
+    
+def find_mean(dataset):
+    total = 0
+    for i in range(len(dataset)):
+        total += dataset[i][0]
+    return total / len(dataset)
+
+def find_variance(dataset, mean):
+    total_variance = 0
+    for i in range(len(dataset)):
+        total_variance += (dataset[i][0] - mean) ** 2
+    return total_variance
+
+def find_covariance(dataset1, mean1, dataset2, mean2):
+    covariance = 0
+    for i in range(len(dataset1)):
+        covariance += (dataset1[i][0] - mean1) * (dataset2[i][0] - mean2)
+    return covariance
+
+def fit(x_train, y_train):
+    x_mean = find_mean(x_train)
+    x_variance = find_variance(x_train, x_mean)
+    y_mean = find_mean(y_train)
+    covariance = find_covariance(x_train, x_mean, y_train, y_mean)
+    b1 = covariance / x_variance
+    b0 = y_mean - b1 * x_mean
+    return b0, b1
+
+def predict(x_test, b0, b1):
+    predicted = []
+    for i in range(len(x_test)):
+        predicted.append(b0 + b1 * x_test[i][0])
+    return predicted
+
+def r2_score(y_test, y_pred):
+    total = 0
+    for i in range(len(y_test)):
+        total += y_test[i][0]
+    mean = total / len(y_test)
+    sum_of_error_square = 0
+    sum_of_average_difference = 0
+    for i in range(len(y_test)):
+        error = y_test[i][0] - y_pred[i]
+        sum_of_error_square += error ** 2
+        sum_of_average_difference += (y_pred[i] - mean) ** 2
+    return 1 - sum_of_error_square / sum_of_average_difference
+
+random.seed(0)
+filename = location
+dataset = csv_reader(filename)
+x, y = x_y(dataset)
+split = 0.33
+x_train, x_test, y_train, y_test = train_test_split(x, y, split)
+b0, b1 = fit(x_train, y_train)
+y_pred = predict(x_test, b0, b1)
+print(r2_score(y_test, y_pred))
+
